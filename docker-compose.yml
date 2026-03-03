@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+
+  nodeapp:
+    build: .
+    container_name: nodeapp2-container
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      DB_NAME: myappdb
+    depends_on:
+      - db
+    expose:
+      - "3000"
+
+  db:
+    image: postgres:15
+    container_name: db-container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: myappdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-container
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - nodeapp
+
+volumes:
+  db_data:
