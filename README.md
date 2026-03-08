@@ -1,6 +1,7 @@
 # 🐳 NodeApp — Full-Stack DevOps Auth Project
 
 > A production-style SaaS authentication application built with Node.js, MongoDB, Nginx, and Docker Compose.  
+> Deployed to AWS EC2 with a fully automated CI/CD pipeline via GitHub Actions.  
 > **By PeterCzu** — DevOps Project
 
 ---
@@ -9,13 +10,22 @@
 
 NodeApp is a containerized web application featuring secure user registration and login, session-based authentication, and a protected dashboard. The entire stack is orchestrated with Docker Compose, with Nginx acting as a reverse proxy in front of the Node.js app.
 
-This project demonstrates real-world DevOps skills including container orchestration, service networking, reverse proxying, and secure backend development.
+This project demonstrates real-world DevOps skills including container orchestration, service networking, reverse proxying, secure backend development, and a fully automated CI/CD pipeline that deploys every code change directly to an AWS EC2 instance.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
+Git Push (main)
+      │
+      ▼
+GitHub Actions (CI/CD)
+      │  SSH into EC2
+      ▼
+AWS EC2 Instance
+      │
+      ▼
 Browser → Nginx (port 80) → Node.js App (port 3000) → MongoDB
 ```
 
@@ -49,6 +59,8 @@ Browser → Nginx (port 80) → Node.js App (port 3000) → MongoDB
 | Session Store   | connect-mongo                 |
 | Reverse Proxy   | Nginx Alpine                  |
 | Containerisation| Docker + Docker Compose       |
+| CI/CD           | GitHub Actions                |
+| Cloud           | AWS EC2                       |
 
 ---
 
@@ -56,6 +68,9 @@ Browser → Nginx (port 80) → Node.js App (port 3000) → MongoDB
 
 ```
 nodeapp/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # GitHub Actions CI/CD pipeline
 ├── Dockerfile              # Node.js app image
 ├── docker-compose.yml      # Multi-container orchestration
 ├── .dockerignore           # Excludes node_modules from build context
@@ -184,10 +199,38 @@ docker system prune -a --volumes
 
 ---
 
+## ⚡ CI/CD Pipeline
+
+This project uses **GitHub Actions** to automatically deploy every change pushed to the `main` branch directly to an **AWS EC2** instance.
+
+### How It Works
+
+```
+Push to main → GitHub Actions triggered → SSH into EC2 → Pull latest code → Rebuild & restart containers
+```
+
+### Workflow Steps
+
+1. **Trigger** — any push to the `main` branch
+2. **SSH into EC2** — using private key stored as a GitHub Secret
+3. **Pull latest code** — `git pull origin main`
+4. **Rebuild containers** — `docker compose down && docker compose up --build -d`
+
+### GitHub Secrets Required
+
+| Secret            | Description                          |
+|-------------------|--------------------------------------|
+| `EC2_HOST`        | Public IP or domain of EC2 instance  |
+| `EC2_USER`        | SSH username (e.g. `ubuntu`, `ec2-user`) |
+| `EC2_SSH_KEY`     | Private SSH key for EC2 access       |
+
+> Secrets are stored securely in **GitHub → Settings → Secrets and Variables → Actions** and never exposed in code.
+
+---
+
 ## 🗺️ Roadmap
 
 - [ ] HTTPS with Let's Encrypt + Certbot
-- [ ] GitHub Actions CI/CD pipeline
 - [ ] Password reset via email
 - [ ] Rate limiting on auth endpoints
 - [ ] MongoDB scheduled backups with `mongodump`
@@ -198,8 +241,8 @@ docker system prune -a --volumes
 ## 👤 Author
 
 **PeterCzu**  
-DevOps & Backend Developer —  Project  
-📧 ipeterdevops@gmail.com 
+DevOps & Backend Developer — Devops Project  
+📧 your-ipeterdevops@gmail.com  
 🔗 [GitHub](https://github.com/peterczu) · [LinkedIn](https://linkedin.com/in/peter-madueke)
 
 ---
@@ -207,4 +250,3 @@ DevOps & Backend Developer —  Project
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
-
