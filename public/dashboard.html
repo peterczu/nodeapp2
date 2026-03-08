@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — PeterCzu DevOps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #16161f;
+      --border: #1e1e2e;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --success: #10b981;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Nav */
+    nav {
+      position: relative; z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(20px);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .nav-title {
+      font-size: 16px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-logout {
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: var(--error, #f43f5e);
+      color: #f43f5e;
+    }
+
+    /* Main */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 40px;
+    }
+
+    .welcome-section {
+      margin-bottom: 48px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--success);
+      margin-bottom: 16px;
+    }
+
+    .welcome-badge::before { content: '●'; font-size: 8px; }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    h1 .username {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-sub {
+      color: var(--muted);
+      font-size: 15px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.2s; }
+
+    .stat-card:hover { border-color: rgba(0,229,255,0.3); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+
+    .stat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), transparent); }
+    .stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--success), transparent); }
+
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Info panel */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .info-card:nth-child(2) { animation-delay: 0.15s; }
+
+    .info-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-key {
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    .info-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .stack-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .stack-item:last-child { border-bottom: none; }
+
+    .stack-badge {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stack-badge.node { background: rgba(0,229,255,0.15); color: var(--accent); }
+    .stack-badge.mongo { background: rgba(16,185,129,0.15); color: var(--success); }
+    .stack-badge.nginx { background: rgba(124,58,237,0.15); color: #a78bfa; }
+    .stack-badge.docker { background: rgba(59,130,246,0.15); color: #60a5fa; }
+
+    @media (max-width: 700px) {
+      nav { padding: 14px 20px; }
+      main { padding: 28px 20px; }
+      h1 { font-size: 28px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">P</div>
+      <span class="nav-title">PeterCzu DevOps</span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="avatar" id="avatarInitial">?</div>
+        <span class="user-name" id="navUsername">Loading...</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="welcome-section">
+      <div class="welcome-badge">Authenticated Session Active</div>
+      <h1>Welcome back,<br/><span class="username" id="welcomeUsername">User</span> 👋</h1>
+      <p class="welcome-sub">// You're securely logged in to PeterCzu DevOps Project</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🔐</div>
+        <div class="stat-value" style="color: var(--accent)">Active</div>
+        <div class="stat-label">Auth Session</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🗄️</div>
+        <div class="stat-value" style="color: #a78bfa">MongoDB</div>
+        <div class="stat-label">Database</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🚀</div>
+        <div class="stat-value" style="color: var(--success)">Running</div>
+        <div class="stat-label">All Services</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>⚡ Account Info</h3>
+        <div class="info-row">
+          <span class="info-key">username</span>
+          <span class="info-val" id="infoUsername">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">email</span>
+          <span class="info-val" id="infoEmail">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">member since</span>
+          <span class="info-val" id="infoDate">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">status</span>
+          <span class="info-val"><span class="status-dot">Online</span></span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>🐳 Stack</h3>
+        <div class="stack-item">
+          <span class="stack-badge node">Node.js</span>
+          <span style="font-size:13px; color: var(--muted)">Express · REST API</span>
+        </div>
+        <div class="stack-item">
+          <span class="stack-badge mongo">MongoDB</span>
+          <span style="font-size:13px; color: var(--muted)">Mongoose ODM</span>
+        </div>
+        <div class="stack-item">
+          <span class="stack-badge nginx">Nginx</span>
+          <span style="font-size:13px; color: var(--muted)">Reverse Proxy</span>
+        </div>
+        <div class="stack-item">
+          <span class="stack-badge docker">Docker</span>
+          <span style="font-size:13px; color: var(--muted)">Compose · Containers</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok) return window.location.href = '/';
+        const { user } = await res.json();
+        document.getElementById('welcomeUsername').textContent = user.username;
+        document.getElementById('navUsername').textContent = user.username;
+        document.getElementById('avatarInitial').textContent = user.username[0].toUpperCase();
+        document.getElementById('infoUsername').textContent = user.username;
+        document.getElementById('infoEmail').textContent = user.email;
+        document.getElementById('infoDate').textContent = new Date(user.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      } catch {
+        window.location.href = '/';
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/';
+    }
+
+    loadUser();
+  </script>
+</body>
+</html>

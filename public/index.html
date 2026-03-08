@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PeterCzu DevOps — Auth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --success: #10b981;
+      --error: #f43f5e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridMove 20s linear infinite;
+      z-index: 0;
+    }
+
+    /* Glow orbs */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      z-index: 0;
+      animation: pulse 8s ease-in-out infinite;
+    }
+
+    .orb2 {
+      position: fixed;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
+      bottom: -50px; left: -50px;
+      z-index: 0;
+      animation: pulse 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(40px); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity:1; } 50% { transform: scale(1.1); opacity:0.7; } }
+
+    .container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px;
+      padding: 0 20px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 44px 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0,229,255,0.05), 0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+      opacity: 0.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,229,255,0.08);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .badge::before { content: '●'; font-size: 8px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #fff 40%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 32px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent2), #5b21b6);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(124,58,237,0.4);
+    }
+
+    /* Forms */
+    .form { display: none; }
+    .form.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform: translateX(10px); } to { opacity:1; transform: translateX(0); } }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    input::placeholder { color: #334155; }
+
+    input:focus {
+      border-color: var(--accent);
+      background: rgba(0,229,255,0.04);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #00b4d8);
+      color: #000;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,229,255,0.35);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    .btn-loader {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert {
+      display: none;
+      padding: 13px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: 'Space Mono', monospace;
+      margin-top: 16px;
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .alert.success {
+      display: block;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: var(--success);
+    }
+
+    .alert.error {
+      display: block;
+      background: rgba(244,63,94,0.1);
+      border: 1px solid rgba(244,63,94,0.3);
+      color: var(--error);
+    }
+
+    .divider {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%; width: calc(50% - 30px);
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      margin-top: 24px;
+    }
+
+    .footer-note span {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="orb2"></div>
+  <div class="container">
+    <div class="card">
+      <div class="badge">PeterCzu DevOps Project</div>
+      <h1>Welcome to<br/>PeterCzu DevOps</h1>
+      <p class="subtitle">// secure auth · mongodb · nginx · docker</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+        <button class="tab-btn" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm" class="form active">
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/>
+        </div>
+        <button class="btn btn-primary" onclick="handleLogin()" id="loginBtn">
+          <span id="loginBtnText">Sign In</span>
+          <div class="btn-loader" id="loginLoader"></div>
+        </button>
+        <div class="alert" id="loginAlert"></div>
+        <div class="footer-note">No account? <span onclick="switchTab('register')">Create one →</span></div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" class="form">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="regUsername" placeholder="devops_hero" autocomplete="username"/>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Min. 6 characters" autocomplete="new-password"/>
+        </div>
+        <button class="btn btn-primary" onclick="handleRegister()" id="registerBtn">
+          <span id="registerBtnText">Create Account</span>
+          <div class="btn-loader" id="registerLoader"></div>
+        </button>
+        <div class="alert" id="registerAlert"></div>
+        <div class="footer-note">Already have an account? <span onclick="switchTab('login')">Sign in →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+      clearAlerts();
+    }
+
+    function clearAlerts() {
+      ['loginAlert','registerAlert'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'alert';
+        el.textContent = '';
+      });
+    }
+
+    function setLoading(btnId, loaderId, textId, loading) {
+      document.getElementById(btnId).disabled = loading;
+      document.getElementById(loaderId).style.display = loading ? 'block' : 'none';
+      document.getElementById(textId).style.display = loading ? 'none' : 'inline';
+    }
+
+    function showAlert(id, message, type) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.className = `alert ${type}`;
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) return showAlert('loginAlert', 'Please fill in all fields.', 'error');
+
+      setLoading('loginBtn', 'loginLoader', 'loginBtnText', true);
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('loginAlert', data.message, 'success');
+          setTimeout(() => window.location.href = data.redirect, 900);
+        } else {
+          showAlert('loginAlert', data.message, 'error');
+        }
+      } catch {
+        showAlert('loginAlert', 'Connection error. Please try again.', 'error');
+      } finally {
+        setLoading('loginBtn', 'loginLoader', 'loginBtnText', false);
+      }
+    }
+
+    async function handleRegister() {
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      if (!username || !email || !password) return showAlert('registerAlert', 'Please fill in all fields.', 'error');
+
+      setLoading('registerBtn', 'registerLoader', 'registerBtnText', true);
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('registerAlert', '✓ ' + data.message, 'success');
+          setTimeout(() => switchTab('login'), 2200);
+        } else {
+          showAlert('registerAlert', data.message, 'error');
+        }
+      } catch {
+        showAlert('registerAlert', 'Connection error. Please try again.', 'error');
+      } finally {
+        setLoading('registerBtn', 'registerLoader', 'registerBtnText', false);
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('loginForm').classList.contains('active')) handleLogin();
+      else handleRegister();
+    });
+  </script>
+</body>
+</html>
